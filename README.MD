@@ -1,3 +1,5 @@
+# Inventory Stockout Risk Prediction
+
 # How to Run the Code
 
 ## Requirements
@@ -11,136 +13,114 @@
 pip install -r requirements.txt
 ```
 
-Problem
+## Problem
 
 Items may unexpectedly go out of stock, reducing sales, item availability and customer satisfaction.
 
-User
+## User
 
 Inventory Planners
 
-Decision
+## Decision
 
 Supports daily inventory planning by helping operations teams prioritize which SKU and venue pairs to proactively review or intervene on, given limited operational capacity.
 
-Relevancy
+## Relevancy
 
 Stockouts reduce item availability and customer satisfaction, and can lead to lost orders and revenue. By predicting which SKUs are at a high risk of stocking out the next day, inventory planners can react earlier, enabling faster replenishment reducing the total number of stockouts.
 
-Data Used
+## Data Used
 
-Daily item sales data across multiple venues in Finland
+- Daily item sales data across multiple venues in Finland
+- SKU information like sales, availability and stockout indicators
 
-SKU information like sales, availability and stockout indicators
+## Key EDA findings
 
-Key EDA findings
+- Recent stockouts highly increase the probability of a future stockout
+- Low Stock availability is associated with higher next day stockout risk
+- Sales spikes of a certain SKU increases the chance of a stockout the next day
 
-Recent stockouts highly increase the probability of a future stockout
+## Important observations for modeling
 
-Low Stock availability is associated with higher next day stockout risk
+- It is more useful to rank high-risk cases than to predict exact probabilities.
+- Item Availability is a critical signal for next day stockouts.
 
-Sales spikes of a certain SKU increases the chance of a stockout the next day
+## Signals Created from the data
 
-Important observations for modeling
+### Sales history Signals
 
-It is more useful to rank high-risk cases than to predict exact probabilities.
+- lag-1 sales
+- 7-day rolling statistics
 
-Item Availability is a critical signal for next day stockouts.
+### Stockout history Signals
 
-Signals Created from the data
-Sales history Signals
+- lag-1 stockout indicator
+- 7-day stockout counter
 
-lag-1 sales
+### Availability Signals
 
-7-day rolling statistics
+- In-stock-ratio
 
-Stockout history Signals
+### Promotion Signals
 
-lag-1 stockout indicator
+- Promotion flag and depth to model demand uplift from discounts.
 
-7-day stockout counter
+### Temporal Signals
 
-Availability Signals
+- Day of week and weekend indicators to capture demand patterns.
 
-In-stock-ratio
+## Not Used
 
-Promotion Signals
+- Any Information not available at the prediction time
+- SKU ID or Venue ID was not given to the model because they are just labels and not useful for the prediction.
+- Restock Data (not available in the dataset but could be used to increase prediction accuracy)
 
-Promotion flag and depth to model demand uplift from discounts.
+## Modeling approach
 
-Temporal Signals
+- Framed the task as a binary classification problem
+- Model used was a gradient boosted decision tree model (LightGBM), because of its ability to capture nonlinear interactions.
+- Model was trained using a time based validation split.
 
-Day of week and weekend indicators to capture demand patterns.
+## Key assumptions
 
-Not Used
+- The model assumes no direct knowledge of upcoming restocks and it solely relies on historical behaviour instead.
+- Signals such as: Recent sales, availability and stockout history contain sufficient information to estimate near future stockout risk.
 
-Any Information not available at the prediction time
+## Model evaluation
 
-SKU ID or Venue ID was not given to the model because they are just labels and not useful for the prediction.
+- Model was evaluated using time based validation split.
+- The model was tested on future days only
+- Models performance was compared against a naive baseline.
 
-Restock Data (not available in the dataset but could be used to increase prediction accuracy)
-
-Modeling approach
-
-Framed the task as a binary classification problem
-
-Model used was a gradient boosted decision tree model (LightGBM), because of its ability to capture nonlinear interactions.
-
-Model was trained using a time based validation split.
-
-Key assumptions
-
-The model assumes no direct knowledge of upcoming restocks and it solely relies on historical behaviour instead.
-
-Signals such as: Recent sales, availability and stockout history contain sufficient information to estimate near future stockout risk.
-
-Model evaluation
-
-Model was evaluated using time based validation split.
-
-The model was tested on future days only
-
-Models performance was compared against a naive baseline.
-
-Metrics used
+## Metrics used
 
 Recall@K (top 5% and top 10%). This measures how many true next day stockouts are captured when reviewing only the highest risk SKUs.
 
-How good are the results
+## How good are the results
 
-The model captures roughly 1 in 4 next-day stockouts at the top 10% highest-risk SKUs
+- The model captures roughly 1 in 4 next-day stockouts at the top 10% highest-risk SKUs
+- This makes the model useful for prioritizing a small subset of items for manual review
+- Performance is directionally valuable for decision support, but not sufficient for fully automated restocking without human oversight and review.
 
-This makes the model useful for prioritizing a small subset of items for manual review
+## Known Limitations
 
-Performance is directionally valuable for decision support, but not sufficient for fully automated restocking without human oversight and review.
+- The model does not have any insight into future restocks
+- Only short-term historical signals are used, which may miss long-term demand trends or seasonal trends
+- Stockouts are treated as a binary event which ignores partial availability and stockouts during a day.
+- The model observes in-stock minutes not on hand inventory.
 
-Known Limitations
+## When would this break in a production setting
 
-The model does not have any insight into future restocks
+- Changes in restocking frequency or supplier behaviour, since this would make the historical stockout patterns unreliable.
+- Major Demand spikes for example during the holidays, as this causes demand spikes the model has not seen before.
+- Since the model relies entirely on past sales, availability, and stockout behavior, its performance degrades when underlying demand or supply dynamics shift.
 
-Only short-term historical signals are used, which may miss long-term demand trends or seasonal trends
+## Next Steps
 
-Stockouts are treated as a binary event which ignores partial availability and stockouts during a day.
+- Add planned restock schedules and delivery schedules to better capture the true stockout risk and increase performance.
+- Add calendar effects to capture holiday signals to better anticipate sudden spikes in demand.
+- Add a measure for prediction confidence to help decide when to trust the model
+- Add more signals to allow for more accurate predictions.
+- Extend the prediction horizon(e.g. 4 days) to allow more time for inventory intervention.
 
-The model observes in-stock minutes not on hand inventory.
-
-When would this break in a production setting
-
-Changes in restocking frequency or supplier behaviour, since this would make the historical stockout patterns unreliable.
-
-Major Demand spikes for example during the holidays, as this causes demand spikes the model has not seen before.
-
-Since the model relies entirely on past sales, availability, and stockout behavior, its performance degrades when underlying demand or supply dynamics shift.
-
-Next Steps
-
-Add planned restock schedules and delivery schedules to better capture the true stockout risk and increase performance.
-
-Add calendar effects to capture holiday signals to better anticipate sudden spikes in demand.
-
-Add a measure for prediction confidence to help decide when to trust the model
-
-Add more signals to allow for more accurate predictions.
-
-Extend the prediction horizon(e.g. 4 days) to allow more time for inventory intervention.
 
