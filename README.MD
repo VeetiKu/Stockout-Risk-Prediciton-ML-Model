@@ -13,6 +13,8 @@
 pip install -r requirements.txt
 ```
 
+# Model Overview
+
 ## Problem
 
 Items may unexpectedly go out of stock, reducing sales, item availability and customer satisfaction.
@@ -122,6 +124,7 @@ Recall@K (top 5% and top 10%). This measures how many true next day stockouts ar
 - Add a measure for prediction confidence to help decide when to trust the model
 - Add more signals to allow for more accurate predictions.
 - Extend the prediction horizon(e.g. 4 days) to allow more time for inventory intervention.
+
 
 
 
