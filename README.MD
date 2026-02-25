@@ -9,7 +9,7 @@
 1. Install dependencies:
 ```bash
 pip install -r requirements.txt
-
+```
 
 Problem
 
@@ -143,3 +143,4 @@ Add a measure for prediction confidence to help decide when to trust the model
 Add more signals to allow for more accurate predictions.
 
 Extend the prediction horizon(e.g. 4 days) to allow more time for inventory intervention.
+
